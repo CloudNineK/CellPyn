@@ -3,8 +3,12 @@ import glob
 import sys
 import cv2
 import numpy as np
+import pandas as pd 
 from matplotlib import pyplot as plt
 
+def pipelineDraft(): 
+    # create panda dataframe
+    pd.DataFrame() 
 
 def genThreshold(img):
     """ Return a thresholded version of img"""
