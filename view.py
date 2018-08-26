@@ -25,6 +25,9 @@ class View(QMainWindow):
         exitAct.setStatusTip('Exit application')
         exitAct.triggered.connect(qApp.quit)
 
+        # Open Action
+        openAct = QAction('&Open', self)
+
         # MENUBAR
         # File
         fileMenu = menubar.addMenu('&File')
@@ -59,7 +62,7 @@ class Layout(QWidget):
 
         self.layout = QHBoxLayout(self)
 
-        tabs = Tabs()
+        tabs = Pipeline()
         self.layout.addWidget(tabs)
 
         rPanel = RightPanel()
@@ -80,15 +83,27 @@ class Pipeline(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Initialize tabs
-        self.tabs = QTabWidget()
-        self.firstTab = QWidget()
-        self.secondTab = QWidget()
-        self.tabs.resize(300, 200)
+        self.layout = QVBoxLayout(self)
 
-        self.tabs.addTab(self.firstTab, "Default")
-        self.tabs.addTab(self.secondTab, "Two")
-        self.testTab()
+        # Initialize tab screen
+        self.tabs = QTabWidget()
+        self.tab1 = QWidget()
+        self.tab2 = QWidget()
+        self.tabs.resize(300,200)
+
+        # Add tabs
+        self.tabs.addTab(self.tab1,"Tab 1")
+        self.tabs.addTab(self.tab2,"Tab 2")
+
+        # Create first tab
+        self.tab1.layout = QVBoxLayout(self)
+        self.tab1.setLayout(self.tab1.layout)
+
+        # Add tabs to widget
+        self.layout.addWidget(self.tabs)
+        self.setLayout(self.layout)
+
+
 
     def testTab(self):
         pixmap = QPixmap("OnionEpidermis.jpg")
