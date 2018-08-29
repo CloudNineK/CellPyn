@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import (QMainWindow, QAction, qApp,
                              QHBoxLayout, QVBoxLayout, QLabel, QApplication,
-                             QWidget, QTabWidget)
+                             QWidget, QTabWidget, QFileDialog)
 
 
 class View(QMainWindow):
@@ -12,6 +12,7 @@ class View(QMainWindow):
         self.initUI()
 
         self.title = 'CellPyn'
+        self.fname = ''
 
     def initUI(self):
 
@@ -27,14 +28,24 @@ class View(QMainWindow):
 
         # Open Action
         openAct = QAction('&Open', self)
+        openAct.setShortcut('Ctrl+O')
+        openAct.setStatusTip('Open Image')
+        openAct.triggered.connect(self.fileDialog)
+
+        # Add Module Action
+        plusAct = QAction('Add Module', self)
+        plusAct.setStatusTip('Add new module')
+        plusAct.triggered.connect(self.addModule)
 
         # MENUBAR
         # File
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(exitAct)
+        fileMenu.addAction(openAct)
 
         # Edit
         fileMenu = menubar.addMenu('&Edit')
+        # Possibly add undo / redo here
 
         # Help
         fileMenu = menubar.addMenu('&Help')
@@ -47,9 +58,15 @@ class View(QMainWindow):
         self.toolbar = self.addToolBar('Exit')
         self.toolbar.addAction(exitAct)
 
-
         self.move(300, 200)
         self.show()
+
+    def fileDialog(self):
+        self.fname = QFileDialog.getOpenFileName(self, 'Open File', '/home')
+        print(self.fname[0])
+
+    def addModule(self):
+        pass
 
 
 class Layout(QWidget):
@@ -62,8 +79,8 @@ class Layout(QWidget):
 
         self.layout = QHBoxLayout(self)
 
-        tabs = Pipeline()
-        self.layout.addWidget(tabs)
+        pipe = Pipeline()
+        self.layout.addWidget(pipe)
 
         rPanel = RightPanel()
         self.layout.addWidget(rPanel)
@@ -83,38 +100,29 @@ class Pipeline(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.layout = QVBoxLayout(self)
-
-        # Initialize tab screen
+        # Setup Tabs
+        self.layout = QVBoxLayout()
         self.tabs = QTabWidget()
-        self.tab1 = QWidget()
-        self.tab2 = QWidget()
-        self.tabs.resize(300,200)
+        # self.tabs.resize(300, 200)
 
-        # Add tabs
-        self.tabs.addTab(self.tab1,"Tab 1")
-        self.tabs.addTab(self.tab2,"Tab 2")
-
-        # Create first tab
-        self.tab1.layout = QVBoxLayout(self)
-        self.tab1.setLayout(self.tab1.layout)
-
-        # Add tabs to widget
         self.layout.addWidget(self.tabs)
         self.setLayout(self.layout)
 
-
+        self.testTab()
 
     def testTab(self):
-        pixmap = QPixmap("OnionEpidermis.jpg")
-
         lbl = QLabel()
+        pixmap = QPixmap("OnionEpidermis.jpg")
         lbl.setPixmap(pixmap)
 
-        self.firstTab.layout = QHBoxLayout(self)
-        self.firstTab.layout.addWidget(lbl)
+        tab = QWidget()
+        tab.resize(300, 300)
+        tab.layout = QVBoxLayout(self)
+        tab.layout.addWidget(lbl)
 
-        self.tabs.addTab(self.firstTab, "Default")
+        tab.setLayout(tab.layout)
+
+        self.tabs.addTab(tab, "Test")
 
 
 if __name__ == '__main__':
