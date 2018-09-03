@@ -39,7 +39,7 @@ class View(QMainWindow):
         # Add Module Action
         plusAct = QAction(QIcon('plus.png'), 'Add Module', self)
         plusAct.setStatusTip('Add new module')
-        plusAct.triggered.connect(self.addModule)
+        plusAct.triggered.connect(self.moduleDialog)
 
         # --- MENUBAR ------------------------------------------------------->
         # File
