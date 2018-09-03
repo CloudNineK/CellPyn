@@ -1,8 +1,11 @@
 import sys
+import os
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import (QMainWindow, QAction, qApp,
                              QHBoxLayout, QVBoxLayout, QLabel, QApplication,
-                             QWidget, QTabWidget, QFileDialog)
+                             QWidget, QTabWidget, QFileDialog, QListWidget)
+
+from PynModules import Threshold
 
 
 class View(QMainWindow):
@@ -13,13 +16,14 @@ class View(QMainWindow):
 
         self.title = 'CellPyn'
         self.fname = ''
+        self.resize(400, 300)
 
     def initUI(self):
 
         self.statusBar()
         menubar = self.menuBar()
 
-        # ACTIONS
+        # --- ACTIONS ------------------------------------------------------->
         # Exit Action
         exitAct = QAction(QIcon('exit.png'), '&Exit', self)
         exitAct.setShortcut('Ctrl+Q')
@@ -33,11 +37,11 @@ class View(QMainWindow):
         openAct.triggered.connect(self.fileDialog)
 
         # Add Module Action
-        plusAct = QAction('Add Module', self)
+        plusAct = QAction(QIcon('plus.png'), 'Add Module', self)
         plusAct.setStatusTip('Add new module')
         plusAct.triggered.connect(self.addModule)
 
-        # MENUBAR
+        # --- MENUBAR ------------------------------------------------------->
         # File
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(exitAct)
@@ -50,22 +54,30 @@ class View(QMainWindow):
         # Help
         fileMenu = menubar.addMenu('&Help')
 
-        # Layout
+        # --- LAYOUT -------------------------------------------------------->
         layout = Layout()
         self.setCentralWidget(layout)
 
         # Toolbar
         self.toolbar = self.addToolBar('Exit')
         self.toolbar.addAction(exitAct)
+        self.toolbar.addAction(plusAct)
 
         self.move(300, 200)
         self.show()
 
     def fileDialog(self):
-        self.fname = QFileDialog.getOpenFileName(self, 'Open File', '/home')
+        """ Dialog connected to the Open Action.
+            Starts in current working directory
+        """
+        self.fname = QFileDialog.getOpenFileName(self, 'Open File',
+                                                 os.getcwd())
+        self.centralWidget().pipe.firstTab(self.fname[0])
         print(self.fname[0])
 
-    def addModule(self):
+    def moduleDialog(self):
+        """ Dialog connected to the Open Action.
+        """
         pass
 
 
@@ -73,20 +85,22 @@ class Layout(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.pipe = Pipeline()
+        self.rPanel = RightPanel()
+
         self.initUI()
 
     def initUI(self):
 
         self.layout = QHBoxLayout(self)
 
-        pipe = Pipeline()
-        self.layout.addWidget(pipe)
+        self.layout.addWidget(self.pipe)
 
-        rPanel = RightPanel()
-        self.layout.addWidget(rPanel)
+        self.layout.addWidget(self.rPanel)
 
 
 class RightPanel(QWidget):
+    """ Side panel used to adjust values for PynModule parameters"""
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -96,6 +110,11 @@ class RightPanel(QWidget):
 
 
 class Pipeline(QWidget):
+    """ Organizational class for managing PynModules added in sequence
+
+        Top-level class manages tab widget display"""
+
+    # TODO: Make sure pipeline facilitates insertion and movement
 
     def __init__(self):
         super().__init__()
@@ -108,11 +127,14 @@ class Pipeline(QWidget):
         self.layout.addWidget(self.tabs)
         self.setLayout(self.layout)
 
-        self.testTab()
+        self.pipe = []
+        # Modules
+        self.modules = {}
+        self.modules['Threshold'] = Threshold()
 
-    def testTab(self):
+    def firstTab(self, fname):
         lbl = QLabel()
-        pixmap = QPixmap("OnionEpidermis.jpg")
+        pixmap = QPixmap(fname)
         lbl.setPixmap(pixmap)
 
         tab = QWidget()
@@ -123,6 +145,10 @@ class Pipeline(QWidget):
         tab.setLayout(tab.layout)
 
         self.tabs.addTab(tab, "Test")
+        pass
+
+    def addModule():
+        pass
 
 
 if __name__ == '__main__':
