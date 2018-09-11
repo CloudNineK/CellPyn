@@ -1,10 +1,12 @@
 import sys
 import os
-from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtGui import QPixmap, QIcon, QImage
 from PyQt5.QtWidgets import (QMainWindow, QAction, qApp,
                              QHBoxLayout, QVBoxLayout, QLabel, QApplication,
-                             QWidget, QTabWidget, QFileDialog, QListWidget)
+                             QWidget, QTabWidget, QFileDialog, QInputDialog,
+                             QListWidget)
 
+from cv2 import imread
 from PynModules import Threshold
 
 
@@ -70,15 +72,22 @@ class View(QMainWindow):
         """ Dialog connected to the Open Action.
             Starts in current working directory
         """
-        self.fname = QFileDialog.getOpenFileName(self, 'Open File',
-                                                 os.getcwd())
-        self.centralWidget().pipe.firstTab(self.fname[0])
-        print(self.fname[0])
+        f = QFileDialog.getOpenFileName(self, 'Open File', os.getcwd())
+        self.fname = f[0]
+        self.centralWidget().pipe.fname = self.fname
+        self.centralWidget().pipe.firstTab()
 
     def moduleDialog(self):
         """ Dialog connected to the Open Action.
         """
-        pass
+
+        # TODO: Get this tuples from a list of modules
+        modules = ("Threshold", "N/A1", "N/A2")
+
+        module, okPressed = QInputDialog.getItem(self, "Select Module",
+                                                 "Selection: ", modules, 0,
+                                                 True)
+        self.centralWidget().pipe.addModule(module)
 
 
 class Layout(QWidget):
@@ -119,24 +128,28 @@ class Pipeline(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Setup Tabs
+        # Tabs / Layout
         self.layout = QVBoxLayout()
         self.tabs = QTabWidget()
-        # self.tabs.resize(300, 200)
-
         self.layout.addWidget(self.tabs)
         self.setLayout(self.layout)
 
-        self.pipe = []
         # Modules
+        self.fname = None
+        self.img = None
+        self.imgMode = True
+        self.pipe = []
         self.modules = {}
         self.modules['Threshold'] = Threshold()
 
-    def firstTab(self, fname):
+    def firstTab(self):
+
+        # Label
         lbl = QLabel()
-        pixmap = QPixmap(fname)
+        pixmap = QPixmap(self.fname)
         lbl.setPixmap(pixmap)
 
+        # Tab Setup
         tab = QWidget()
         tab.resize(300, 300)
         tab.layout = QVBoxLayout(self)
@@ -144,11 +157,50 @@ class Pipeline(QWidget):
 
         tab.setLayout(tab.layout)
 
-        self.tabs.addTab(tab, "Test")
+        self.tabs.addTab(tab, "Raw")
+
+    def addModule(self, moduleName: str):
+
+        # Module
+        module = self.modules[moduleName]
+        img = self.getImg()
+
+        # hardcoded blur for init; remove when not testing
+        proc = module.app(img, 3)
+
+        # Label
+        lbl = QLabel()
+        pixmap = QPixmap(self.cvToPixmap(proc))
+        lbl.setPixmap(pixmap)
+
+        # Tab Setup
+        tab = QWidget()
+        tab.resize(300, 300)
+        tab.layout = QVBoxLayout(self)
+        tab.layout.addWidget(lbl)
+
+        tab.setLayout(tab.layout)
+
+        self.tabs.addTab(tab, moduleName)
         pass
 
-    def addModule():
-        pass
+    def getImg(self):
+        if self.img is None and self.imgMode:
+            self.img = imread(self.fname, 1)
+
+        return self.img
+
+    def cvToPixmap(self, img):
+        """ Convert openCV image to QPixmap
+            TODO: Port to PynModule
+                  bytesPerLine = width * 1 is only for B/W images
+        """
+        print(img.shape)
+        height, width = img.shape
+        bytesPerLine = width
+        qImg = QImage(img.data, width, height, bytesPerLine,
+                      QImage.Format_Grayscale8)
+        return qImg
 
 
 if __name__ == '__main__':

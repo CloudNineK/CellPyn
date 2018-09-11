@@ -8,13 +8,16 @@ class PynModule():
     def apply(self):
         pass
 
+    def cvToPixmap(self, img, col):
+        pass
+
 
 class Threshold(PynModule):
 
     def __init__(self):
         pass
 
-    def apply(image, blurAmount, thresh='Adaptive'):
+    def app(self, image, blurAmount, thresh='Adaptive'):
         """ Apply selected thresholding algorithm to image"""
 
         # Greyscale image for thresholding
@@ -28,3 +31,11 @@ class Threshold(PynModule):
                                     cv2.THRESH_BINARY, 61, 2)
 
         return out
+
+
+class Filter(PynModule):
+    def __init__(self):
+        pass
+
+    def apply(self):
+        pass
