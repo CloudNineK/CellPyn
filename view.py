@@ -1,13 +1,13 @@
 import sys
 import os
 from PyQt5.QtGui import QPixmap, QIcon, QImage
-from PyQt5.QtWidgets import (QMainWindow, QAction, qApp,
+from PyQt5.QtWidgets import (QMainWindow, QAction, qApp, QPushButton,
                              QHBoxLayout, QVBoxLayout, QLabel, QApplication,
                              QWidget, QTabWidget, QFileDialog, QInputDialog,
-                             QListWidget)
+                             QSlider)
 
 from cv2 import imread
-from PynModules import Threshold
+from PynModules import Threshold, Filter
 
 
 class View(QMainWindow):
@@ -82,7 +82,7 @@ class View(QMainWindow):
         """
 
         # TODO: Get this tuples from a list of modules
-        modules = ("Threshold", "N/A1", "N/A2")
+        modules = ("Threshold", "Filter", "N/A2")
 
         module, okPressed = QInputDialog.getItem(self, "Select Module",
                                                  "Selection: ", modules, 0,
@@ -95,27 +95,11 @@ class Layout(QWidget):
     def __init__(self):
         super().__init__()
         self.pipe = Pipeline()
-        self.rPanel = RightPanel()
-
         self.initUI()
 
     def initUI(self):
-
         self.layout = QHBoxLayout(self)
-
         self.layout.addWidget(self.pipe)
-
-        self.layout.addWidget(self.rPanel)
-
-
-class RightPanel(QWidget):
-    """ Side panel used to adjust values for PynModule parameters"""
-    def __init__(self):
-        super().__init__()
-        self.initUI()
-
-    def initUI(self):
-        self.layout = QVBoxLayout(self)
 
 
 class Pipeline(QWidget):
@@ -140,7 +124,23 @@ class Pipeline(QWidget):
         self.imgMode = True
         self.pipe = []
         self.modules = {}
-        self.modules['Threshold'] = Threshold()
+
+        self.modules['Threshold'] = Threshold
+        self.modules['Filter'] = Filter
+
+    class SidePanel(QWidget):
+        """ Side panel used to adjust values for PynModule parameters"""
+
+        def __init__(self, controllers):
+            super().__init__()
+
+            # Vertical Controller Layout
+            self.layout = QVBoxLayout()
+            self.controllers = []
+            self.initUI()
+
+        def initUI(self):
+            self.layout.addWidget(QPushButton('Top'))
 
     def firstTab(self):
 
@@ -152,7 +152,7 @@ class Pipeline(QWidget):
         # Tab Setup
         tab = QWidget()
         tab.resize(300, 300)
-        tab.layout = QVBoxLayout(self)
+        tab.layout = QHBoxLayout(self)
         tab.layout.addWidget(lbl)
 
         tab.setLayout(tab.layout)
@@ -161,23 +161,26 @@ class Pipeline(QWidget):
 
     def addModule(self, moduleName: str):
 
-        # Module
-        module = self.modules[moduleName]
-        img = self.getImg()
+        # Get Module
+        module = self.modules[moduleName](self.img)
 
-        # hardcoded blur for init; remove when not testing
-        proc = module.app(img, 3)
+        # Apply module
+        proc = module.app()
 
         # Label
         lbl = QLabel()
         pixmap = QPixmap(self.cvToPixmap(proc))
         lbl.setPixmap(pixmap)
 
+        # Side Panel
+        panel = self.SidePanel()
+
         # Tab Setup
         tab = QWidget()
         tab.resize(300, 300)
-        tab.layout = QVBoxLayout(self)
+        tab.layout = QHBoxLayout(self)
         tab.layout.addWidget(lbl)
+        tab.layout.addWidget(panel)
 
         tab.setLayout(tab.layout)
 
@@ -206,6 +209,7 @@ class Pipeline(QWidget):
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)
+    app.setStyle('Fusion')
     view = View()
 
     sys.exit(app.exec_())
